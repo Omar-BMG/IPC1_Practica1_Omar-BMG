@@ -2,10 +2,13 @@
 package controlador;
 
 import java.util.ArrayList;
+import javax.swing.JOptionPane;
 import modelo.DatosFases;
+import modelo.ManejoArchivoBinario;
 import modelo.Producto;
 import modelo.Resultados;
 import modelo.TiempoModel;
+import vista.frmEstacionCarga;
 import vista.frmEstacionResultados;
 import vista.frmEstacionTrabajo;
 
@@ -20,6 +23,7 @@ public class ControladorET {
     DatosFases datosFases = new DatosFases(); //Intanciamos una variable de tipo Datos fases y llamamos al contructor vacio, para en la siguiente línea poder usar una de sus funciones
     ArrayList<DatosFases> datosFaseEnsamblaje = datosFases.obtenerDatos(true); //En este Array tenemos los datos de tiempo y costo según el material para la fase ensamblaje, por eso es "true"
     ArrayList<DatosFases> datosFasePintura = datosFases.obtenerDatos(false); //En este Array tenemos los datos de tiempo y costo según el color para la fase de pintura, por eso es "false"
+    
     String tiempoTotal; //Variable donde se guardará el tiempo total
     String tiempoUnidad; //variable donde se guardará el tiempo por Unidad
     String costoTotal; //Variable donde se guardará el costo total
@@ -74,42 +78,60 @@ public class ControladorET {
                 //Almacenamos los datos como el tiempo y costo según material y pintura:
                 DatosFases datosEnsamblaje = this.obtenerDatosFase(producto.getMaterial(), true); //Obtenemos los datos correspondientes al material para el ensamblaje, es decir, los segundos y el costo
                 DatosFases datosPintura = this.obtenerDatosFase(producto.getColor(), false); //Obtenemos los datos correspondientes a la pintura para el producto, es decir, los segundos y el costo
+                if((datosEnsamblaje == null)||(datosPintura==null)) { //Si alguno de estos objetos esta vacío quiere decir que el material o el color no está disponible.
+                    tiempoModelo.setHiloProduccionIsAlive(false); //Comunicamos al hilo del tiempo que este hilo terminó sus procesos principales
+                    if((datosEnsamblaje == null) && (datosPintura == null)){
+                        JOptionPane.showMessageDialog(this.vistaEstacionTrabajo, "El material: "+this.producto.getMaterial()+", y el color: "+this.producto.getColor()+", no están disponibles. Volverá a la estación de carga");
+                    }else if(datosEnsamblaje == null){
+                        JOptionPane.showMessageDialog(this.vistaEstacionTrabajo, "El material: "+this.producto.getMaterial()+", no está disponible, volverá a la estación de carga");
+                    } else{
+                        JOptionPane.showMessageDialog(this.vistaEstacionTrabajo, "El color: "+this.producto.getColor()+", no está disponible, volverá a la estación de carga");
+                    }
+                    Thread.sleep(2000); //Dormimos el hilo para que el usuario pueda leer los mensajes
+                    //-------Abrimos una nueva ventana de estación carga-------
+                    frmEstacionCarga vistaEstacionCarga = new frmEstacionCarga();  //Intanciamos una ventana de carga
+                    ManejoArchivoBinario archivo = new ManejoArchivoBinario(); //Instaciamos el modelo para el controlador
+                    ControladorEC controladorEC = new ControladorEC(vistaEstacionCarga, archivo); //Intanciamos el controlador de la ventana de carga y le enviamos la ventana de carga instanicada previamente, y el modelo del archivo
+                    controladorEC.iniciar(); //Llamamos al procedimiento iniciar del controlador de la estacion de carga para mostrar la ventana.
+                    this.vistaEstacionTrabajo.dispose(); //Cerramos la ventana actual
+                    Thread.interrupted();
+                }
                 
                 for(int i = 1; i <= producto.getCantidad(); i++) { //Ciclo for para la cantidad de productos solicitada
                     this.vistaEstacionTrabajo.lblContadorProductos.setText(i+"/"+producto.getCantidad()); //Actualizamos el label del contador de productos
-                    //---------FASE DE ENSAMBLAJE-----------
-                    for(int j = 0; j <=100; j++){ //Ciclo for para actualizar la progressBar y el label de porcentaje
-                        Thread.sleep((datosEnsamblaje.getTiempo()*1000)/100); //Obtenemos los segundos a tardar, se multiplica por 1000 para pasarlo a mili segundos y se divide en 100 para que en cada iteración duerma al hilo los segundos necesarios hasta llenar la barra
-                        this.vistaEstacionTrabajo.pbEnsamblaje.setValue(j);//Actualizamos el estado de la barra
-                        this.vistaEstacionTrabajo.lblPorcentajeEnsamblaje.setText(j+"%"); //Actualiza la etiqueta que indica el porcentaje en cada iteración
-                    }
-                    
-                    //---------FASE DE PINTURA--------
-                    for(int j = 0; j<=100;j++) { //Ciclo for para actualizar el progressBar  y el label de porcentaje
-                        Thread.sleep((datosPintura.getTiempo()*1000)/100); //Obtenemos los segundos a tardar, se multiplica por 1000 para pasarlo a mili segundos y se divide en 100 para que en cada iteración duerma al hilo los segundos necesarios hasta llenar la barra
-                        this.vistaEstacionTrabajo.pbPintura.setValue(j); //Actualizamos el estado del progressBar
-                        this.vistaEstacionTrabajo.lblPorcentajePintura.setText(j+"%"); //Actualizamos la etiqueta del porcentaje
-                    }
-                    
-                    //--------FASE DE EMPAQUE----------
-                    //Ya sabemos que debe tardarse 10 segundos
-                    for(int j = 0; j<=100 ;j++) {
-                        Thread.sleep((10*1000)/100); 
-                        this.vistaEstacionTrabajo.pbEmpaque.setValue(j);
-                        this.vistaEstacionTrabajo.lblPorcentajeEmpaque.setText(j+"%");
-                    }
-                    //---------Ahora almacenamos el tiempo que tomó 1 producto para RESULTADOS-----
-                    if(i == 1) {
-                        this.tiempoUnidad = tiempoModelo.tiempoActual(); //Almacenamos el tiempo por unidad si es la primera vez que termina un producto
-                    }
-                    
-                    //Ahora limpiamos las barras y los porcentajes
-                    this.vistaEstacionTrabajo.pbEnsamblaje.setValue(0);
-                    this.vistaEstacionTrabajo.lblPorcentajeEnsamblaje.setText("0%");
-                    this.vistaEstacionTrabajo.pbPintura.setValue(0);
-                    this.vistaEstacionTrabajo.lblPorcentajePintura.setText("0%");
-                    this.vistaEstacionTrabajo.pbEmpaque.setValue(0);
-                    this.vistaEstacionTrabajo.lblPorcentajeEmpaque.setText("0%");
+                        //---------FASE DE ENSAMBLAJE-----------
+                        for(int j = 0; j <=100; j++){ //Ciclo for para actualizar la progressBar y el label de porcentaje
+                            Thread.sleep((datosEnsamblaje.getTiempo()*1000)/100); //Obtenemos los segundos a tardar, se multiplica por 1000 para pasarlo a mili segundos y se divide en 100 para que en cada iteración duerma al hilo los segundos necesarios hasta llenar la barra
+                            this.vistaEstacionTrabajo.pbEnsamblaje.setValue(j);//Actualizamos el estado de la barra
+                            this.vistaEstacionTrabajo.lblPorcentajeEnsamblaje.setText(j+"%"); //Actualiza la etiqueta que indica el porcentaje en cada iteración
+                        }
+
+                        //---------FASE DE PINTURA--------
+                        for(int j = 0; j<=100;j++) { //Ciclo for para actualizar el progressBar  y el label de porcentaje
+                            Thread.sleep((datosPintura.getTiempo()*1000)/100); //Obtenemos los segundos a tardar, se multiplica por 1000 para pasarlo a mili segundos y se divide en 100 para que en cada iteración duerma al hilo los segundos necesarios hasta llenar la barra
+                            this.vistaEstacionTrabajo.pbPintura.setValue(j); //Actualizamos el estado del progressBar
+                            this.vistaEstacionTrabajo.lblPorcentajePintura.setText(j+"%"); //Actualizamos la etiqueta del porcentaje
+                        }
+
+                        //--------FASE DE EMPAQUE----------
+                        //Ya sabemos que debe tardarse 10 segundos
+                        for(int j = 0; j<=100 ;j++) {
+                            Thread.sleep((10*1000)/100); 
+                            this.vistaEstacionTrabajo.pbEmpaque.setValue(j);
+                            this.vistaEstacionTrabajo.lblPorcentajeEmpaque.setText(j+"%");
+                        }
+                        //---------Ahora almacenamos el tiempo que tomó 1 producto para RESULTADOS-----
+                        if(i == 1) {
+                            this.tiempoUnidad = tiempoModelo.tiempoActual(); //Almacenamos el tiempo por unidad si es la primera vez que termina un producto
+                        }
+
+                        //Ahora limpiamos las barras y los porcentajes
+                        this.vistaEstacionTrabajo.pbEnsamblaje.setValue(0);
+                        this.vistaEstacionTrabajo.lblPorcentajeEnsamblaje.setText("0%");
+                        this.vistaEstacionTrabajo.pbPintura.setValue(0);
+                        this.vistaEstacionTrabajo.lblPorcentajePintura.setText("0%");
+                        this.vistaEstacionTrabajo.pbEmpaque.setValue(0);
+                        this.vistaEstacionTrabajo.lblPorcentajeEmpaque.setText("0%");
                 }
                 tiempoModelo.setHiloProduccionIsAlive(false); //Comunicamos al hilo del tiempo que este hilo terminó sus procesos principales
                 //-----almacenamos datos que servirán para la ventana RESULTADOS -----------
@@ -117,7 +139,7 @@ public class ControladorET {
                 this.costoUnidad = String.format("%.2f", ((datosEnsamblaje.getCosto()*datosEnsamblaje.getTiempo())+(datosPintura.getCosto()*datosPintura.getTiempo())+20));
                 this.costoTotal = String.format("%.2f", ((datosEnsamblaje.getCosto()*datosEnsamblaje.getTiempo())+(datosPintura.getCosto()*datosPintura.getTiempo())+20)*producto.getCantidad());
                 
-                Thread.sleep(5000); //Dormimos el hilo 5 segundos para que el usuairo pueda apreciar los datos de la ventana
+                Thread.sleep(3000); //Dormimos el hilo 5 segundos para que el usuairo pueda apreciar los datos de la ventana
                 //-----Ahora instanciamos el modelo y la vista para la estación de resultados------
                 Resultados resultado = new Resultados(producto, costoTotal, costoUnidad, tiempoTotal, tiempoUnidad); //Modelo
                 frmEstacionResultados vistaEstacionResultados = new frmEstacionResultados(); //vista

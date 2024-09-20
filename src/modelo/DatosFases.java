@@ -58,7 +58,7 @@ public class DatosFases {
             datosFases.add(new DatosFases("VIDRIO", 10, 6));
             datosFases.add(new DatosFases("NYLON", 20, 2));
             datosFases.add(new DatosFases("HULE", 10, 5));
-            datosFases.add(new DatosFases("POLIÉSTER", 5, 4));
+            datosFases.add(new DatosFases("POLIESTER", 5, 4));
         } else {
             datosFases.add(new DatosFases("VERDE", 15, 3));
             datosFases.add(new DatosFases("NEGRO", 25, 1));

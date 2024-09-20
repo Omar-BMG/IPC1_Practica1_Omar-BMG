@@ -25,11 +25,11 @@ public class ControladorER {
         this.vistaEstacionResultados.setLocationRelativeTo(null);
         this.vistaEstacionResultados.lblCodigoResultado.setText("Producto: "+this.resultado.getProducto().getCodigo());
         this.vistaEstacionResultados.lblNombreResultado.setText("Nombre: "+this.resultado.getProducto().getNombre());
-        this.vistaEstacionResultados.lblColorResultado.setText("Color: "+this.resultado.getProducto().getColor());
-        this.vistaEstacionResultados.lblMaterialResultado.setText("Material: "+this.resultado.getProducto().getMaterial());
+        this.vistaEstacionResultados.lblColorResultado.setText("Color: "+this.resultado.getProducto().getColor().toLowerCase());
+        this.vistaEstacionResultados.lblMaterialResultado.setText("Material: "+this.resultado.getProducto().getMaterial().toLowerCase());
         this.vistaEstacionResultados.lblCantidadResultado.setText("Cantidad: "+this.resultado.getProducto().getCantidad());
-        this.vistaEstacionResultados.lblCostoResultado.setText("Costo total: "+this.resultado.getCostoTotal());
-        this.vistaEstacionResultados.lblCostoUnidadResultado.setText("Costo c/u: "+this.resultado.getCostoUnidad());
+        this.vistaEstacionResultados.lblCostoResultado.setText("Costo total: Q"+this.resultado.getCostoTotal());
+        this.vistaEstacionResultados.lblCostoUnidadResultado.setText("Costo c/u: Q"+this.resultado.getCostoUnidad());
         this.vistaEstacionResultados.lblTiempoResultado.setText("Tiempo total: "+this.resultado.getTiempoTotal());
         this.vistaEstacionResultados.lblTiempoUnidadResultado.setText("Tiempo c/u: "+this.resultado.getTiempoUnidad());
         this.vistaEstacionResultados.btnVolverEstacionCarga.addActionListener(listenerVolver());

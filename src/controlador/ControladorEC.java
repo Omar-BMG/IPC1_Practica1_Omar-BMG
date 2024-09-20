@@ -86,11 +86,11 @@ public class ControladorEC {
                 
                 if(productos_actuales.size()==0) { //Si el binario no tiene productos, ejecuta esto
                     //Ahora usamos el arraylist "productos" y almacenamos un nuevo producto y le enviamos al constructor los datos obtenidos.
-                    productos.add(new Producto(codigo, nombre, material, color)); //Respetamos el orden del constructor de la clase Producto
+                    productos.add(new Producto(codigo, nombre, material.toLowerCase(), color.toLowerCase())); //Respetamos el orden del constructor de la clase Producto
                 }
                 else if((codigoExiste = validarCodigoCSV(productos_actuales,codigo))){    
                 } else{
-                    productos.add(new Producto(codigo, nombre, material, color)); //Respetamos el orden del constructor de la clase Producto
+                    productos.add(new Producto(codigo, nombre, material.toLowerCase(), color.toLowerCase())); //Respetamos el orden del constructor de la clase Producto
                 } 
             }
             
